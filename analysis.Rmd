@@ -1,0 +1,62 @@
+---
+title: "analysis"
+author: "Ross Cunning"
+date: "9/19/2018"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Load R Packages
+
+```{r libraries}
+library(tidyverse)
+library(devtools)  # install.packages("devtools")
+#devtools::install_github("jrcunning/steponeR")
+library(steponeR)
+```
+
+# Import qPCR data with steponeR package
+
+For help use "?steponeR"
+
+```{r load_data}
+# List data files
+plates <- list.files(path = "data", pattern = ".txt", full.names = TRUE)
+plates
+
+# Read in data and calculate target ratios
+df <- steponeR(files = plates, 
+         delim = "\t", 
+         target.ratios = c("C.Ssid", "D.Ssid"), 
+         fluor.norm = list(C = 2.234, D = 0, Ssid = 5.587),
+         copy.number = list(C = 20, D = 1, Ssid = 1),
+         ploidy = list(C = 1, D = 1, Ssid = 2),
+         extract = list(C = 0.813, D = 0.813, Ssid = 0.982))
+qpcr <- df$result
+
+# View data
+head(qpcr)
+
+# Filter out samples that didn't amplify
+qpcr <- qpcr %>%
+  filter(!(is.na(C.Ssid) & is.na(D.Ssid)))
+```
+
+# Plot data
+```{r}
+# Set no detections to value below minimum detected value
+qpcr <- qpcr %>%
+  mutate(C.Ssid = ifelse(is.na(C.Ssid), min(C.Ssid, na.rm = T) * 0.5, C.Ssid),
+         D.Ssid = ifelse(is.na(D.Ssid), min(D.Ssid, na.rm = T) * 0.5, D.Ssid))
+
+# Plot D vs. C
+ggplot(qpcr, aes(x = log10(C.Ssid), y = log10(D.Ssid))) +
+  geom_point() +
+  geom_abline(linetype = 2) +
+  xlim(-8, 1) + ylim(-8, 1)
+```
+
+

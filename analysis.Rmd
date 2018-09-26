@@ -72,7 +72,14 @@ ggplot(qpcr, aes(x = log10(C.Ssid), y = log10(D.Ssid))) +
 ```{r}
 devtools::source_url("https://raw.githubusercontent.com/jrcunning/IPAM2R/master/R/import_ipam.R")
 
-pam <- import_ipam(dir="data/IPAM", ipam.pattern="*.csv$", info.pattern="*ids.txt")
+pam <- import_ipam(dir="data/IPAM", ipam.pattern = "*.csv$", info.pattern = "*ids.txt")
 pam
+
+boxplot(pam$Y)
+
+
+# If you don't care about the IDs for each AOI
+pam_noIDs <- import_ipam(dir = "data/IPAM", ipam.pattern = "*.csv", info.pattern = NULL)
+pam_noIDs
 ```
 

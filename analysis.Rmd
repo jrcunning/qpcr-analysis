@@ -11,10 +11,13 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 # Load R Packages
 
+## This is a smaller heading
+### Even smaller
+
 ```{r libraries}
-library(tidyverse)
+library(tidyverse) # install.packages('tidyverse')
 library(devtools)  # install.packages("devtools")
-#devtools::install_github("jrcunning/steponeR")
+devtools::install_github("jrcunning/steponeR")
 library(steponeR)
 ```
 
@@ -29,20 +32,26 @@ plates
 
 # Read in data and calculate target ratios
 df <- steponeR(files = plates, 
-         delim = "\t", 
-         target.ratios = c("C.Ssid", "D.Ssid"), 
-         fluor.norm = list(C = 2.234, D = 0, Ssid = 5.587),
-         copy.number = list(C = 20, D = 1, Ssid = 1),
-         ploidy = list(C = 1, D = 1, Ssid = 2),
-         extract = list(C = 0.813, D = 0.813, Ssid = 0.982))
+               delim = "\t", 
+               target.ratios = c("C.Ssid", "D.Ssid"), 
+               fluor.norm = list(C = 2.234, D = 0, Ssid = 5.587),
+               copy.number = list(C = 20, D = 1, Ssid = 1),
+               ploidy = list(C = 1, D = 1, Ssid = 2),
+               extract = list(C = 0.813, D = 0.813, Ssid = 0.982))
 qpcr <- df$result
 
 # View data
 head(qpcr)
+View(qpcr)
+
+# Show samples that didn't work
+fails <- qpcr %>%
+  filter(is.na(C.Ssid) & is.na(D.Ssid))
 
 # Filter out samples that didn't amplify
-qpcr <- qpcr %>%
-  filter(!(is.na(C.Ssid) & is.na(D.Ssid)))
+qpcr_good <- qpcr %>%
+  filter(!(is.na(C.Ssid) & is.na(D.Ssid))) %>%
+  filter(Ssid.CT.sd < 1)
 ```
 
 # Plot data
@@ -59,4 +68,11 @@ ggplot(qpcr, aes(x = log10(C.Ssid), y = log10(D.Ssid))) +
   xlim(-8, 1) + ylim(-8, 1)
 ```
 
+# Import IPAM data
+```{r}
+devtools::source_url("https://raw.githubusercontent.com/jrcunning/IPAM2R/master/R/import_ipam.R")
+
+pam <- import_ipam(dir="data/IPAM", ipam.pattern="*.csv$", info.pattern="*ids.txt")
+pam
+```
 
